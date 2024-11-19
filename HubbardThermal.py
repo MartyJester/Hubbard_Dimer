@@ -40,11 +40,18 @@ def en_3p(t, V, U):
 
 
 def en_4p(t, V, U):
-    return np.array([2*U])
+    return np.array([2 * U])
 
 
 def energy_combined(t, V, U):
     return [en_0p(t, V, U), en_1p(t, V, U), en_2p(t, V, U), en_3p(t, V, U), en_4p(t, V, U)]
+
+
+def can_z_part_func(t, V, U, tau, n):
+    if n >= 0 and n <= 3:
+        return np.sum(np.exp(-1 / tau * energy_combined(t, V, U)[n]))
+    else:
+        print('error in can_z_part_func')
 
 
 def energies_concat(t, V, U, mu):
@@ -58,15 +65,29 @@ def energies_concat(t, V, U, mu):
     return energies
 
 
-def z_part_func(t, V, U, tau, mu):
+def granc_z_part_func(t, V, U, tau, mu):
     energies = energies_concat(t, V, U, mu)
-    zpart = np.sum(np.exp(energies * (-1/tau)))
+    zpart = np.sum(np.exp(energies * (-1 / tau)))
     return zpart
 
 
 def omega(t, V, U, tau, mu):
-    return -tau * np.log(z_part_func(t, V, U, tau, mu))
+    return -tau * np.log(granc_z_part_func(t, V, U, tau, mu))
 
 
 def entropy(t, V, U, tau, mu):
-    return -tau * np.log(omega(t, V, U, tau, mu))
+    energies = energies_concat(t, V, U, mu)
+    z = granc_z_part_func(t, V, U, tau, mu)
+    numerator = np.sum(
+        np.array([np.exp(1 / tau * np.sum(np.delete(energies, i))) * energies[i] for i in range(len(energies))]))
+    denominator = np.sum(np.array([np.exp(1 / tau * np.sum(np.delete(energies, i))) for i in range(len(energies))]))
+    return np.log(z) + 1 / tau * numerator / denominator
+
+
+def num_part_func(t, V, U, tau, mu):
+    z = granc_z_part_func(t, V, U, tau, mu)
+    return tau / z * np.sum(
+        np.array([i / tau * np.exp(i / tau) * can_z_part_func(t, V, U, tau, i) for i in range(0, 3)]))
+
+
+
