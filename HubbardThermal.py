@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import jax.numpy as jnp
 
 
 def h_1p(t, V):
@@ -86,14 +87,30 @@ def entropy(t, V, U, tau, mu):
 
 def num_particles_func(t, V, U, tau, mu):
     Zg = granc_z_part_func(t, V, U, tau, mu)
-    weight_n = np.sum(np.array([n * np.exp(1/tau*mu*n)*can_z_part_func(t, V, U, tau, n) for n in range(1,5)]))
+    weight_n = np.sum(np.array([n * np.exp(1 / tau * mu * n) * can_z_part_func(t, V, U, tau, n) for n in range(1, 5)]))
     return weight_n / Zg
+
 
 def gran_can_A(t, V, U, tau, mu):
     return mu * num_particles_func(t, V, U, tau, mu) + omega(t, V, U, tau, mu)
 
 
+def density(t, V, U, tau, mu):
+    n12 = np.diag([2, 1, 1, 0, 1, 1])
+    n22 = np.diag([0, 1, 1, 2, 1, 1])
+    n11 = np.diag([1, 1, 0, 0])
+    n21 = np.diag([0, 0, 1, 1])
+    Dn2OP = n12 - n22
+    Dn1OP = n11 - n21
+    energies_1, eigenvectors_1 = np.linalg.eig(h_1p(t, V))
+    energies_2, eigenvectors_2 = np.linalg.eig(h_2p(t, V, U))
+    rho_1 = eigenvectors_1.T @ Dn1OP @ eigenvectors_1
+    rho_1 = rho_1.diagonal()
+    rho_2 = eigenvectors_2.T @ Dn2OP @ eigenvectors_2
+    rho_2 = rho_2.diagonal()
+    z = granc_z_part_func(t, V, U, tau, mu)
+    dens = 1 / z * (np.dot(rho_1, np.exp(-1 / tau * (energies_1 - mu))) + np.dot(rho_2, np.exp(-1 / tau * (energies_2 - 2 * mu))) + np.dot(rho_1, np.exp(-1 / tau * (energies_1 + U - 3* mu))))
+    return dens
 
 
-
-
+print(density(1, 2, 3, 4, 5))
