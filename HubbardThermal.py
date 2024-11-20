@@ -109,8 +109,10 @@ def density(t, V, U, tau, mu):
     rho_2 = eigenvectors_2.T @ Dn2OP @ eigenvectors_2
     rho_2 = rho_2.diagonal()
     z = granc_z_part_func(t, V, U, tau, mu)
-    dens = 1 / z * (np.dot(rho_1, np.exp(-1 / tau * (energies_1 - mu))) + np.dot(rho_2, np.exp(-1 / tau * (energies_2 - 2 * mu))) + np.dot(rho_1, np.exp(-1 / tau * (energies_1 + U - 3* mu))))
+    term1p = np.dot(rho_1, np.exp(-1 / tau * (energies_1 - mu)))
+    term2p = np.dot(rho_2, np.exp(-1 / tau * (energies_2 - 2 * mu)))
+    term3p = np.dot(rho_1, np.exp(-1 / tau * (energies_1 + U - 3 * mu)))
+    dens = 1 / z * (term1p + term2p + term3p)
     return dens
 
 
-print(density(1, 2, 3, 4, 5))
