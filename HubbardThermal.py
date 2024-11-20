@@ -48,7 +48,7 @@ def energy_combined(t, V, U):
 
 
 def can_z_part_func(t, V, U, tau, n):
-    if n >= 0 and n <= 3:
+    if 0 <= n <= 4:
         return np.sum(np.exp(-1 / tau * energy_combined(t, V, U)[n]))
     else:
         print('error in can_z_part_func')
@@ -84,10 +84,16 @@ def entropy(t, V, U, tau, mu):
     return np.log(z) + 1 / tau * numerator / denominator
 
 
-def num_part_func(t, V, U, tau, mu):
-    z = granc_z_part_func(t, V, U, tau, mu)
-    return tau / z * np.sum(
-        np.array([i / tau * np.exp(i / tau) * can_z_part_func(t, V, U, tau, i) for i in range(0, 3)]))
+def num_particles_func(t, V, U, tau, mu):
+    Zg = granc_z_part_func(t, V, U, tau, mu)
+    weight_n = np.sum(np.array([n * np.exp(1/tau*mu*n)*can_z_part_func(t, V, U, tau, n) for n in range(1,5)]))
+    return weight_n / Zg
+
+def gran_can_A(t, V, U, tau, mu):
+    return mu * num_particles_func(t, V, U, tau, mu) + omega(t, V, U, tau, mu)
+
+
+
 
 
 
