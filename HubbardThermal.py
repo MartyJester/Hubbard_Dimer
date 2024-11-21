@@ -115,9 +115,10 @@ def density(t, V, U, tau, mu):
     dens = 1 / z * (term1p + term2p + term3p)
     return dens
 
+
 rho_vectorized = np.vectorize(density)
-for temp in [1,2,3,4,5]:
-    plt.plot(np.linspace(0,100, 50),rho_vectorized(0.5, np.linspace(0,100, 50), 1, temp, 0.5), label=temp)
+for temp in [1, 2, 3, 4, 5]:
+    plt.plot(np.linspace(0, 100, 50), rho_vectorized(0.5, np.linspace(0, 100, 50), 1, temp, 0.5), label=temp)
 plt.xlabel('v')
 plt.legend()
 plt.ylabel('Density')
