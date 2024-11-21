@@ -244,65 +244,78 @@ def delta_v_of_rho(t, U, tau, mu):
     # Create and return the interpolating function
     return interp1d(x, y, kind='linear', fill_value="extrapolate")
 
-# Example tau values
+
+# Define reusable functions
+def plot_function(function, tau_values, v_space, x_label, y_label, legend_title, title=None):
+    """
+    Plots the given function for different tau values.
+
+    Args:
+    - function: The function to be plotted.
+    - tau_values: List of tau values to iterate over.
+    - v_space: The range of x values for the plot.
+    - x_label: Label for the x-axis.
+    - y_label: Label for the y-axis.
+    - legend_title: Title for the legend.
+    - title: Title for the plot (optional).
+    """
+    func_vectorized = np.vectorize(function)
+    plt.figure(figsize=(10, 6))
+    for tau in tau_values:
+        plt.plot(v_space, func_vectorized(0.5, v_space, 1, tau, 0.5), label=r"$\tau=$" + f"{tau}")
+    if title:
+        plt.title(title)
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.legend(title=legend_title)
+    plt.grid(True)
+    plt.show()
+
+
+def plot_interpolated_function(interpolating_function_factory, tau_values, x_range, t, U, mu, x_label, y_label,
+                               legend_title, title=None):
+    """
+    Plots interpolated functions for different tau values.
+
+    Args:
+    - interpolating_function_factory: Function to generate interpolating functions.
+    - tau_values: List of tau values.
+    - x_range: Range of x values for the plot.
+    - t: Parameter for the interpolating function.
+    - U: Parameter for the interpolating function.
+    - mu: Parameter for the interpolating function.
+    - x_label: Label for the x-axis.
+    - y_label: Label for the y-axis.
+    - legend_title: Title for the legend.
+    - title: Title for the plot (optional).
+    """
+    plt.figure(figsize=(10, 6))
+    for tau in tau_values:
+        interpolating_function = interpolating_function_factory(t, U, tau, mu)
+        y_values = interpolating_function(x_range)
+        plt.plot(x_range, y_values, label=f"tau = {tau}")
+    if title:
+        plt.title(title)
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.legend(title=legend_title)
+    plt.grid(True)
+    plt.show()
+
+
+# Parameters
 tau_values = [1.0, 2.0, 3.0, 4.0, 5.0]
 v_space = np.linspace(0, 80, 50)
-rho_vec = np.vectorize(density)
-plt.figure(figsize=(10, 6))
-for temp in tau_values:
-    plt.plot(v_space, rho_vec(0.5, v_space, 1, temp, 0.5), label=r"$\tau=$"+f"{temp}")
-plt.xlabel(r"$-\Delta v$")
-plt.legend()
-plt.ylabel('Density')
-plt.grid(True)
-plt.show()
+t, U, mu = 1.0, 2.0, 1.0
+x_range = np.linspace(0, 2, 500)
 
-tau_values = [1.0, 2.0, 3.0, 4.0, 5.0]
-kinetic_vec = np.vectorize(kinetic)
-plt.figure(figsize=(10, 6))
-for temp in tau_values:
-    plt.plot(v_space, kinetic_vec(0.5, v_space, 1, temp, 0.5), label=r"$\tau=$"+f"{temp}")
-plt.xlabel(r"$-\Delta v$")
-plt.legend(title="Legend:")
-plt.ylabel('kin')
-plt.grid(True)
-plt.show()
+# Example usage
+plot_function(density, tau_values, v_space, x_label=r"$-\Delta v$", y_label="Density", legend_title="Legend:")
+plot_function(kinetic, tau_values, v_space, x_label=r"$-\Delta v$", y_label="Kinetic", legend_title="Legend:")
+plot_function(vee, tau_values, v_space, x_label=r"$-\Delta v$", y_label="Vee", legend_title="Legend:")
 
-tau_values = [1.0, 2.0, 3.0, 4.0, 5.0]
-vee_vec = np.vectorize(vee)
-plt.figure(figsize=(10, 6))
-for temp in tau_values:
-    plt.plot(v_space, vee_vec(0.5, v_space, 1, temp, 0.5), label=r"$\tau=$"+f"{temp}")
-plt.xlabel(r"$-\Delta v$")
-plt.legend(title="Legend:")
-plt.ylabel('vee')
-plt.grid(True)
-plt.show()
-
-
-
-# Other parameters
-t, U, mu = 1.0, 2.0, 1.
-
-# Initialize the plot
-plt.figure(figsize=(10, 6))
-
-# Loop over tau values
-for tau in tau_values:
-    # Create the interpolation function for the current tau
-    interpolating_function = delta_v_of_rho(t, U, tau, mu)
-
-    # Generate x values for plotting
-    x_values = np.linspace(0, 2, 500)  # Adjust the range as needed
-    y_values = interpolating_function(x_values)
-
-    # Plot with a label for the current tau
-    plt.plot(x_values, y_values, label=f"tau = {tau}")
-
-# Finalize the plot
-plt.title(r"Interpolated Function $\Delta v$ vs $\rho$ for Different $\tau$")
-plt.xlabel(r"Re[$\rho$]")
-plt.ylabel(r"$-\Delta v$")
-plt.legend(title="Legend:")
-plt.grid(True)
-plt.show()
+plot_interpolated_function(
+    delta_v_of_rho, tau_values, x_range, t, U, mu,
+    x_label=r"Re[$\rho$]", y_label=r"$-\Delta v$", legend_title="Legend:",
+    title=r"Interpolated Function $\Delta v$ vs $\rho$ for Different $\tau$"
+)
