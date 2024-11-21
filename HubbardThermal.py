@@ -1,9 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import jax.numpy as jnp
-from scipy.optimize import root_scalar
 from scipy.optimize import minimize_scalar
 from scipy.interpolate import interp1d
+# import jax.numpy as jnp
+# from scipy.optimize import root_scalar
+
 
 
 def h_1p(t, V):
