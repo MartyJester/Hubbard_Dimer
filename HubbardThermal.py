@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import jax.numpy as jnp
 from scipy.optimize import root_scalar
+from scipy.optimize import minimize_scalar
 from scipy.interpolate import interp1d
 
 
@@ -177,54 +178,9 @@ def vee(t, V, U, tau, mu):
     return property_calculation(t, V, U, tau, mu, operator_1p, operator_2p)
 
 
-# def density(t, V, U, tau, mu):
-#     n12 = np.diag([2, 1, 1, 0, 1, 1])
-#     n22 = np.diag([0, 1, 1, 2, 1, 1])
-#     n11 = np.diag([1, 1, 0, 0])
-#     n21 = np.diag([0, 0, 1, 1])
-#     Dn2OP = n12 - n22
-#     Dn1OP = n11 - n21
-#     energies_1, eigenvectors_1 = np.linalg.eig(h_1p(t, V))
-#     energies_2, eigenvectors_2 = np.linalg.eig(h_2p(t, V, U))
-#     rho_1 = eigenvectors_1.T @ Dn1OP @ eigenvectors_1
-#     rho_1 = rho_1.diagonal()
-#     rho_2 = eigenvectors_2.T @ Dn2OP @ eigenvectors_2
-#     rho_2 = rho_2.diagonal()
-#     z = granc_z_part_func(t, V, U, tau, mu)
-#     term1p = np.dot(rho_1, np.exp(-1 / tau * (energies_1 - mu)))
-#     term2p = np.dot(rho_2, np.exp(-1 / tau * (energies_2 - 2 * mu)))
-#     term3p = np.dot(rho_1, np.exp(-1 / tau * (energies_1 + U - 3 * mu)))
-#     dens = 1 / z * (term1p + term2p + term3p)
-#     return dens
-#
-#
-# def kinetic(t, V, U, tau, mu):
-#     energies_1, eigenvectors_1 = np.linalg.eig(h_1p(t, V))
-#     energies_2, eigenvectors_2 = np.linalg.eig(h_2p(t, V, U))
-#     T_1 = eigenvectors_1.T @ h_1p(t, 0) @ eigenvectors_1
-#     T_1 = T_1.diagonal()
-#     T_2 = eigenvectors_2.T @ h_2p(t, 0, 0) @ eigenvectors_2
-#     T_2 = T_2.diagonal()
-#     z = granc_z_part_func(t, V, U, tau, mu)
-#     term1p = np.dot(T_1, np.exp(-1 / tau * (energies_1 - mu)))
-#     term2p = np.dot(T_2, np.exp(-1 / tau * (energies_2 - 2 * mu)))
-#     term3p = np.dot(T_1, np.exp(-1 / tau * (energies_1 + U - 3 * mu)))
-#     T = 1 / z * (term1p + term2p + term3p)
-#     return T
-#
-# def vee(t, V, U, tau, mu):
-#     energies_1, eigenvectors_1 = np.linalg.eig(h_1p(t, V))
-#     energies_2, eigenvectors_2 = np.linalg.eig(h_2p(t, V, U))
-#     V_1 = eigenvectors_1.T @ h_1p(0, 0) @ eigenvectors_1
-#     V_1 = V_1.diagonal()
-#     V_2 = eigenvectors_2.T @ h_2p(0, 0, U) @ eigenvectors_2
-#     V_2 = V_2.diagonal()
-#     z = granc_z_part_func(t, V, U, tau, mu)
-#     term1p = np.dot(V_1, np.exp(-1 / tau * (energies_1 - mu)))
-#     term2p = np.dot(V_2, np.exp(-1 / tau * (energies_2 - 2 * mu)))
-#     term3p = np.dot(V_1 + U, np.exp(-1 / tau * (energies_1 + U - 3 * mu)))
-#     vee = 1 / z * (term1p + term2p + term3p)
-#     return vee
+def target_function(t, V, U, tau, mu, nn):
+    return gran_can_A(t, V, U, tau, mu) - (V / 2) * nn
+
 
 
 def delta_v_of_rho_list(t, U, tau, mu):
@@ -300,22 +256,49 @@ def plot_interpolated_function(interpolating_function_factory, tau_values, x_ran
     plt.ylabel(y_label)
     plt.legend(title=legend_title)
     plt.grid(True)
-    plt.show()
+    plt.ylim(-20,1)
+    #plt.show()
 
 
 # Parameters
 tau_values = [1.0, 2.0, 3.0, 4.0, 5.0]
 v_space = np.linspace(0, 80, 50)
-t, U, mu = 1.0, 2.0, 1.0
+t, U, mu = 0.5, 1.0, 0.5
 x_range = np.linspace(0, 2, 500)
 
 # Example usage
-plot_function(density, tau_values, v_space, x_label=r"$-\Delta v$", y_label="Density", legend_title="Legend:")
-plot_function(kinetic, tau_values, v_space, x_label=r"$-\Delta v$", y_label="Kinetic", legend_title="Legend:")
-plot_function(vee, tau_values, v_space, x_label=r"$-\Delta v$", y_label="Vee", legend_title="Legend:")
+# plot_function(density, tau_values, v_space, x_label=r"$-\Delta v$", y_label="Density", legend_title="Legend:")
+# plot_function(kinetic, tau_values, v_space, x_label=r"$-\Delta v$", y_label="Kinetic", legend_title="Legend:")
+# plot_function(vee, tau_values, v_space, x_label=r"$-\Delta v$", y_label="Vee", legend_title="Legend:")
 
+
+tau_values = [1.0]
 plot_interpolated_function(
     delta_v_of_rho, tau_values, x_range, t, U, mu,
     x_label=r"Re[$\rho$]", y_label=r"$-\Delta v$", legend_title="Legend:",
     title=r"Interpolated Function $\Delta v$ vs $\rho$ for Different $\tau$"
 )
+# Parameters
+t = 0.5    # Replace with actual parameter
+U = 1.0    # Replace with actual parameter
+tau = 1.0  # Replace with actual parameter
+mu = 0.5  # Replace with actual parameter
+nn_values = np.linspace(0, 2, 500)  # Range of nn values from 0 to 2
+
+# Compute the optimal V for each nn
+v_max_values = []
+for nn in nn_values:
+    # Maximization using minimize_scalar
+    result = minimize_scalar(lambda V: -target_function(t, V, U, tau, mu, nn))
+    v_max_values.append(result.x)
+
+# Plot the results
+plt.figure(figsize=(10, 6))
+plt.plot(nn_values, v_max_values, label='Optimal V', color='blue')
+plt.xlabel("Nn")
+plt.ylabel("Optimal V")
+plt.title("Optimal V as a Function of Nn")
+plt.legend()
+plt.grid(True)
+plt.ylim(-20,1)
+plt.show()
