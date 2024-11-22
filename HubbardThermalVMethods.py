@@ -201,6 +201,14 @@ def delta_v_of_rho(t, U, tau, mu):
     # Create and return the interpolating function
     return interp1d(x, y, kind='linear', fill_value="extrapolate")
 
+def delta_v_of_rho_kantorovich(densities):
+    v_max_values_kant = []
+    for dens in densities:
+        # Maximization using minimize_scalar
+        kant = minimize_scalar(lambda V: -target_function(t, V, U, tau, mu, dens))
+        v_max_values_kant.append(kant.x)
+    return np.array(v_max_values_kant)
+
 
 # Define reusable functions
 def plot_function(function, tau_values, v_space, x_label, y_label, legend_title, title=None):
@@ -258,48 +266,6 @@ def plot_interpolated_function(interpolating_function_factory, tau_values, x_ran
     plt.legend(title=legend_title)
     plt.grid(True)
     plt.ylim(-20,1)
-    #plt.show()
+    plt.show()
 
 
-# Parameters
-tau_values = [1.0, 2.0, 3.0, 4.0, 5.0]
-v_space = np.linspace(0, 80, 50)
-t, U, mu = 0.5, 1.0, 0.5
-x_range = np.linspace(0, 2, 500)
-
-# Example usage
-# plot_function(density, tau_values, v_space, x_label=r"$-\Delta v$", y_label="Density", legend_title="Legend:")
-# plot_function(kinetic, tau_values, v_space, x_label=r"$-\Delta v$", y_label="Kinetic", legend_title="Legend:")
-# plot_function(vee, tau_values, v_space, x_label=r"$-\Delta v$", y_label="Vee", legend_title="Legend:")
-
-
-tau_values = [1.0]
-plot_interpolated_function(
-    delta_v_of_rho, tau_values, x_range, t, U, mu,
-    x_label=r"Re[$\rho$]", y_label=r"$-\Delta v$", legend_title="Legend:",
-    title=r"Interpolated Function $\Delta v$ vs $\rho$ for Different $\tau$"
-)
-# Parameters
-t = 0.5    # Replace with actual parameter
-U = 1.0    # Replace with actual parameter
-tau = 1.0  # Replace with actual parameter
-mu = 0.5  # Replace with actual parameter
-nn_values = np.linspace(0, 2, 500)  # Range of nn values from 0 to 2
-
-# Compute the optimal V for each nn
-v_max_values = []
-for nn in nn_values:
-    # Maximization using minimize_scalar
-    result = minimize_scalar(lambda V: -target_function(t, V, U, tau, mu, nn))
-    v_max_values.append(result.x)
-
-# Plot the results
-plt.figure(figsize=(10, 6))
-plt.plot(nn_values, v_max_values, label='Optimal V', color='blue')
-plt.xlabel("Nn")
-plt.ylabel("Optimal V")
-plt.title("Optimal V as a Function of Nn")
-plt.legend()
-plt.grid(True)
-plt.ylim(-20,1)
-plt.show()
