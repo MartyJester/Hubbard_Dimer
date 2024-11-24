@@ -108,17 +108,21 @@ def compute_eigenvalues_and_vectors(t, V, U):
     return (energies_1, eigenvectors_1), (energies_2, eigenvectors_2)
 
 
-def compute_terms(energies_1, energies_2, values_1, values_2, tau, mu, U):
+def compute_terms(energies_1, energies_2, values_1, values_2, tau, mu, U, operator):
     """
     Computes the weighted terms for a given property (density, kinetic, vee).
     """
     term1p = np.dot(values_1, np.exp(-1 / tau * (energies_1 - mu)))
     term2p = np.dot(values_2, np.exp(-1 / tau * (energies_2 - 2 * mu)))
     term3p = np.dot(values_1, np.exp(-1 / tau * (energies_1 + U - 3 * mu)))
-    return term1p, term2p, term3p
+    term4p = 0
+    if operator == 'vee':
+        term3p = np.dot(values_1 + U, np.exp(-1 / tau * (energies_1 + U - 3 * mu)))
+        term4p = (2 * U) * np.exp(-1 / tau *(2 * U - 4 * mu))
+    return term1p, term2p, term3p, term4p
 
 
-def property_calculation(t, V, U, tau, mu, operator_1p, operator_2p, diagonalize_h1=True, diagonalize_h2=True):
+def property_calculation(t, V, U, tau, mu, operator_1p, operator_2p, operator, diagonalize_h1=True, diagonalize_h2=True):
     """
     Generalized function to calculate a property (density, kinetic, vee).
     Parameters `operator_1p` and `operator_2p` are functions that compute the required diagonal values.
@@ -134,10 +138,10 @@ def property_calculation(t, V, U, tau, mu, operator_1p, operator_2p, diagonalize
     z = granc_z_part_func(t, V, U, tau, mu)
 
     # Compute terms
-    term1p, term2p, term3p = compute_terms(energies_1, energies_2, values_1, values_2, tau, mu, U)
+    term1p, term2p, term3p, term4p = compute_terms(energies_1, energies_2, values_1, values_2, tau, mu, U, operator = operator)
 
     # Compute final property
-    return 1 / z * (term1p + term2p + term3p)
+    return 1 / z * (term1p + term2p + term3p + term4p)
 
 
 # Specific property functions
@@ -166,7 +170,7 @@ def kinetic(t, V, U, tau, mu):
     def operator_2p(eigenvectors, t, V, U):
         return (eigenvectors.T @ h_2p(t, 0, 0) @ eigenvectors).diagonal()
 
-    return property_calculation(t, V, U, tau, mu, operator_1p, operator_2p)
+    return property_calculation(t, V, U, tau, mu, operator_1p, operator_2p, operator = 'kin')
 
 
 def vee(t, V, U, tau, mu):
@@ -176,7 +180,7 @@ def vee(t, V, U, tau, mu):
     def operator_2p(eigenvectors, t, V, U):
         return (eigenvectors.T @ h_2p(0, 0, U) @ eigenvectors).diagonal()
 
-    return property_calculation(t, V, U, tau, mu, operator_1p, operator_2p)
+    return property_calculation(t, V, U, tau, mu, operator_1p, operator_2p, operator = 'vee')
 
 
 def target_function(t, V, U, tau, mu, nn):
@@ -201,7 +205,7 @@ def delta_v_of_rho(t, U, tau, mu):
     # Create and return the interpolating function
     return interp1d(x, y, kind='linear', fill_value="extrapolate")
 
-def delta_v_of_rho_kantorovich(densities):
+def delta_v_of_rho_kantorovich(densities, t, U, tau):
     v_max_values_kant = []
     for dens in densities:
         # Maximization using minimize_scalar
@@ -269,3 +273,7 @@ def plot_interpolated_function(interpolating_function_factory, tau_values, x_ran
     plt.show()
 
 
+t,v,U,tau,mu = 1.,2,3,4,5
+print(kinetic(t,v,U,tau,mu))# -0.214451
+print(vee(t,v,U,tau,mu))# 2.50531
+print(entropy(t,v,U,tau,mu))# 2.46694
