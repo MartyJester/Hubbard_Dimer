@@ -59,9 +59,9 @@ def can_z_part_func(t, V, U, tau, n):
         print('error in can_z_part_func')
 
 
-def energies_concat(t, V, U, mu):
-    array_mu = np.array([0, 1, 2, 3, 4]) * mu
-    energies = energy_combined(t, V, U)
+def energies_concat(t_par, V_par, U_par, mu_par):
+    array_mu = np.array([0, 1, 2, 3, 4]) * mu_par
+    energies = energy_combined(t_par, V_par, U_par)
     result_rows = []
     for i, row in enumerate(energies):
         subtracted_row = row - array_mu[i]
@@ -70,23 +70,23 @@ def energies_concat(t, V, U, mu):
     return energies
 
 
-def granc_z_part_func(t, V, U, tau, mu):
-    energies = energies_concat(t, V, U, mu)
-    zpart = np.sum(np.exp(energies * (-1 / tau)))
+def granc_z_part_func(t_par, V_par, U_par, tau_par, mu_par):
+    energies = energies_concat(t_par, V_par, U_par, mu_par)
+    zpart = np.sum(np.exp(energies * (-1 / tau_par)))
     return zpart
 
 
-def omega(t, V, U, tau, mu):
-    return -tau * np.log(granc_z_part_func(t, V, U, tau, mu))
+def omega(t_par, V_par, U_par, tau_par, mu_par):
+    return -tau_par * np.log(granc_z_part_func(t_par, V_par, U_par, tau_par, mu_par))
 
 
-def entropy(t, V, U, tau, mu):
-    energies = energies_concat(t, V, U, mu)
-    z = granc_z_part_func(t, V, U, tau, mu)
+def entropy(t_par, V_par, U_par, tau_par, mu_par):
+    energies = energies_concat(t_par, V_par, U_par, mu_par)
+    z = granc_z_part_func(t_par, V_par, U_par, tau_par, mu_par)
     numerator = np.sum(
-        np.array([np.exp(1 / tau * np.sum(np.delete(energies, i))) * energies[i] for i in range(len(energies))]))
-    denominator = np.sum(np.array([np.exp(1 / tau * np.sum(np.delete(energies, i))) for i in range(len(energies))]))
-    return np.log(z) + 1 / tau * numerator / denominator
+        np.array([np.exp(1 / tau_par * np.sum(np.delete(energies, i))) * energies[i] for i in range(len(energies))]))
+    denominator = np.sum(np.array([np.exp(1 / tau_par * np.sum(np.delete(energies, i))) for i in range(len(energies))]))
+    return np.log(z) + 1 / tau_par * numerator / denominator
 
 
 def num_particles_func(t, V, U, tau, mu):
@@ -108,37 +108,37 @@ def compute_eigenvalues_and_vectors(t, V, U):
     return (energies_1, eigenvectors_1), (energies_2, eigenvectors_2)
 
 
-def compute_terms(energies_1, energies_2, values_1, values_2, tau, mu, U, operator):
+def compute_terms(energies_1, energies_2, values_1, values_2, tau_par, mu_par, U_par, operator):
     """
     Computes the weighted terms for a given property (density, kinetic, vee).
     """
-    term1p = np.dot(values_1, np.exp(-1 / tau * (energies_1 - mu)))
-    term2p = np.dot(values_2, np.exp(-1 / tau * (energies_2 - 2 * mu)))
-    term3p = np.dot(values_1, np.exp(-1 / tau * (energies_1 + U - 3 * mu)))
+    term1p = np.dot(values_1, np.exp(-1 / tau_par * (energies_1 - mu_par)))
+    term2p = np.dot(values_2, np.exp(-1 / tau_par * (energies_2 - 2 * mu_par)))
+    term3p = np.dot(values_1, np.exp(-1 / tau_par * (energies_1 + U_par - 3 * mu_par)))
     term4p = 0
     if operator == 'vee':
-        term3p = np.dot(values_1 + U, np.exp(-1 / tau * (energies_1 + U - 3 * mu)))
-        term4p = (2 * U) * np.exp(-1 / tau *(2 * U - 4 * mu))
+        term3p = np.dot(values_1 + U_par, np.exp(-1 / tau_par * (energies_1 + U_par - 3 * mu_par)))
+        term4p = (2 * U_par) * np.exp(-1 / tau_par *(2 * U_par - 4 * mu_par))
     return term1p, term2p, term3p, term4p
 
 
-def property_calculation(t, V, U, tau, mu, operator_1p, operator_2p, operator, diagonalize_h1=True, diagonalize_h2=True):
+def property_calculation(t_par, V_par, U_par, tau_par, mu_par, operator_1p, operator_2p, operator, diagonalize_h1=True, diagonalize_h2=True):
     """
     Generalized function to calculate a property (density, kinetic, vee).
     Parameters `operator_1p` and `operator_2p` are functions that compute the required diagonal values.
     """
     # Compute eigenvalues and eigenvectors
-    (energies_1, eigenvectors_1), (energies_2, eigenvectors_2) = compute_eigenvalues_and_vectors(t, V, U)
+    (energies_1, eigenvectors_1), (energies_2, eigenvectors_2) = compute_eigenvalues_and_vectors(t_par, V_par, U_par)
 
     # Compute diagonal values
-    values_1 = operator_1p(eigenvectors_1, t, V, U) if diagonalize_h1 else np.zeros_like(energies_1)
-    values_2 = operator_2p(eigenvectors_2, t, V, U) if diagonalize_h2 else np.zeros_like(energies_2)
+    values_1 = operator_1p(eigenvectors_1, t_par, V_par, U_par) if diagonalize_h1 else np.zeros_like(energies_1)
+    values_2 = operator_2p(eigenvectors_2, t_par, V_par, U_par) if diagonalize_h2 else np.zeros_like(energies_2)
 
     # Compute the partition function
-    z = granc_z_part_func(t, V, U, tau, mu)
+    z = granc_z_part_func(t_par, V_par, U_par, tau_par, mu_par)
 
     # Compute terms
-    term1p, term2p, term3p, term4p = compute_terms(energies_1, energies_2, values_1, values_2, tau, mu, U, operator = operator)
+    term1p, term2p, term3p, term4p = compute_terms(energies_1, energies_2, values_1, values_2, tau_par, mu_par, U_par, operator = operator)
 
     # Compute final property
     return 1 / z * (term1p + term2p + term3p + term4p)
@@ -163,24 +163,24 @@ def density(t, V, U, tau, mu):
     return property_calculation(t, V, U, tau, mu, operator_1p, operator_2p)
 
 
-def kinetic(t, V, U, tau, mu):
-    def operator_1p(eigenvectors, t, V, U):
-        return (eigenvectors.T @ h_1p(t, 0) @ eigenvectors).diagonal()
+def kinetic(t_par, V_par, U_par, tau_par, mu_par):
+    def operator_1p(eigenvectors, t_par, V_par, U_par):
+        return (eigenvectors.T @ h_1p(t_par, 0) @ eigenvectors).diagonal()
 
-    def operator_2p(eigenvectors, t, V, U):
-        return (eigenvectors.T @ h_2p(t, 0, 0) @ eigenvectors).diagonal()
+    def operator_2p(eigenvectors, t_par, V_par, U_par):
+        return (eigenvectors.T @ h_2p(t_par, 0, 0) @ eigenvectors).diagonal()
 
-    return property_calculation(t, V, U, tau, mu, operator_1p, operator_2p, operator = 'kin')
+    return property_calculation(t_par, V_par, U_par, tau_par, mu_par, operator_1p, operator_2p, operator = 'kin')
 
 
-def vee(t, V, U, tau, mu):
-    def operator_1p(eigenvectors, t, V, U):
+def vee(t_par, V_par, U_par, tau_par, mu_par):
+    def operator_1p(eigenvectors, t_par, V_par, U_par):
         return (eigenvectors.T @ h_1p(0, 0) @ eigenvectors).diagonal()
 
-    def operator_2p(eigenvectors, t, V, U):
-        return (eigenvectors.T @ h_2p(0, 0, U) @ eigenvectors).diagonal()
+    def operator_2p(eigenvectors, t_par, V_par, U_par):
+        return (eigenvectors.T @ h_2p(0, 0, U_par) @ eigenvectors).diagonal()
 
-    return property_calculation(t, V, U, tau, mu, operator_1p, operator_2p, operator = 'vee')
+    return property_calculation(t_par, V_par, U_par, tau_par, mu_par, operator_1p, operator_2p, operator = 'vee')
 
 
 def target_function(t, V, U, tau, mu, nn):
@@ -196,26 +196,26 @@ def delta_v_of_rho_list(t, U, tau, mu):
     return np.array(data)  # Convert to a NumPy array for easier processing
 
 # Interpolation function
-def delta_v_of_rho(t, U, tau, mu):
+def delta_v_of_rho(t_par, U_par, tau_par, mu_par):
     # Get the data list
-    data = delta_v_of_rho_list(t, U, tau, mu)
+    data = delta_v_of_rho_list(t_par, U_par, tau_par, mu_par)
     # Separate the data into x (real part of rho) and y (-delta_v)
     x = data[:, 0]  # Real part of rho
     y = data[:, 1]  # -delta_v
     # Create and return the interpolating function
     return interp1d(x, y, kind='linear', fill_value="extrapolate")
 
-def delta_v_of_rho_kantorovich(densities, t, U, tau):
+def delta_v_of_rho_kantorovich(densities, t_par, U_par, tau_par, mu_par):
     v_max_values_kant = []
     for dens in densities:
         # Maximization using minimize_scalar
-        kant = minimize_scalar(lambda V: -target_function(t, V, U, tau, mu, dens))
+        kant = minimize_scalar(lambda V_par: -target_function(t_par, V_par, U_par, tau_par, mu_par, dens))
         v_max_values_kant.append(kant.x)
     return np.array(v_max_values_kant)
 
 
 # Define reusable functions
-def plot_function(function, tau_values, v_space, x_label, y_label, legend_title, title=None):
+def plot_function(function, tau_values, t_par, U_par, mu_par, v_space, x_label, y_label, legend_title, title=None):
     """
     Plots the given function for different tau values.
 
@@ -230,8 +230,8 @@ def plot_function(function, tau_values, v_space, x_label, y_label, legend_title,
     """
     func_vectorized = np.vectorize(function)
     plt.figure(figsize=(10, 6))
-    for tau in tau_values:
-        plt.plot(v_space, func_vectorized(0.5, v_space, 1, tau, 0.5), label=r"$\tau=$" + f"{tau}")
+    for tau_par in tau_values:
+        plt.plot(v_space, func_vectorized(t_par, v_space, U_par, tau_par, mu_par), label=r"$\tau=$" + f"{tau_par}")
     if title:
         plt.title(title)
     plt.xlabel(x_label)
@@ -241,7 +241,7 @@ def plot_function(function, tau_values, v_space, x_label, y_label, legend_title,
     plt.show()
 
 
-def plot_interpolated_function(interpolating_function_factory, tau_values, x_range, t, U, mu, x_label, y_label,
+def plot_interpolated_function(interpolating_function_factory, tau_values, x_range, t_par, U_par, mu_par, x_label, y_label,
                                legend_title, title=None):
     """
     Plots interpolated functions for different tau values.
@@ -259,10 +259,10 @@ def plot_interpolated_function(interpolating_function_factory, tau_values, x_ran
     - title: Title for the plot (optional).
     """
     plt.figure(figsize=(10, 6))
-    for tau in tau_values:
-        interpolating_function = interpolating_function_factory(t, U, tau, mu)
+    for tau_par in tau_values:
+        interpolating_function = interpolating_function_factory(t_par, U_par, tau_par, mu_par)
         y_values = interpolating_function(x_range)
-        plt.plot(x_range, y_values, label=f"tau = {tau}")
+        plt.plot(x_range, y_values, label=f"tau = {tau_par}")
     if title:
         plt.title(title)
     plt.xlabel(x_label)
@@ -273,7 +273,7 @@ def plot_interpolated_function(interpolating_function_factory, tau_values, x_ran
     plt.show()
 
 
-t,v,U,tau,mu = 1.,2,3,4,5
-print(kinetic(t,v,U,tau,mu))# -0.214451
-print(vee(t,v,U,tau,mu))# 2.50531
-print(entropy(t,v,U,tau,mu))# 2.46694
+ti,vi,Ui,taui,mui = 1.,2,3,4,5
+print(kinetic(ti,vi,Ui,taui,mui))# -0.214451
+print(vee(ti,vi,Ui,taui,mui))# 2.50531
+print(entropy(ti,vi,Ui,taui,mui))# 2.46694
