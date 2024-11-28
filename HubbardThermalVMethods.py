@@ -272,8 +272,37 @@ def plot_interpolated_function(interpolating_function_factory, tau_values, x_ran
     plt.ylim(-20,1)
     plt.show()
 
+# Wrap expected values with numpy.vectorize
+vectorized_kinetic = np.vectorize(kinetic)
+vectorized_vee = np.vectorize(vee)
+vectorized_entropy = np.vectorize(entropy)
 
-ti,vi,Ui,taui,mui = 1.,2,3,4,5
-print(kinetic(ti,vi,Ui,taui,mui))# -0.214451
-print(vee(ti,vi,Ui,taui,mui))# 2.50531
-print(entropy(ti,vi,Ui,taui,mui))# 2.46694
+######################################### DENSITY FUNCTIONALS #############################################
+def T_of_n(dens_par, t_par, U_par, tau_par, mu_par):
+    v_dens = delta_v_of_rho_kantorovich(dens_par, t_par, U_par, tau_par, mu_par)
+    return vectorized_kinetic(t_par, v_dens, U_par, tau_par, mu_par)
+
+
+def Vee_of_n(dens_par, t_par, U_par, tau_par, mu_par):
+    v_dens = delta_v_of_rho_kantorovich(dens_par, t_par, U_par, tau_par, mu_par)
+    return vectorized_vee(t_par, v_dens, U_par, tau_par, mu_par)
+
+
+def S_of_n(dens_par, t_par, U_par, tau_par, mu_par):
+    v_dens = delta_v_of_rho_kantorovich(dens_par, t_par, U_par, tau_par, mu_par)
+    return vectorized_entropy(t_par, v_dens, U_par, tau_par, mu_par)
+
+
+
+############################################ TEST AREA ####################################################
+# Fixed parameters
+ti, vi, Ui, taui, mui = 0.5, 2, 1, 1, 0.5
+dens_grid = np.arange(0, 2, 0.05)
+# plt.plot(dens_grid,Vee_of_n(dens_grid, ti, Ui, taui, mui))
+# plt.xlabel("density")
+# plt.ylabel("Kinetic energy")
+# plt.xlim(0,2)
+# plt.show()
+# print(kinetic(ti, vi, Ui, taui, mui))# -0.214451
+# print(vee(ti,vi,Ui,taui,mui))# 2.50531
+# print(entropy(ti,vi,Ui,taui,mui))# 2.46694
