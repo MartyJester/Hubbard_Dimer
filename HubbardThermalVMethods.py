@@ -292,17 +292,48 @@ def S_of_n(dens_par, t_par, U_par, tau_par, mu_par):
     v_dens = delta_v_of_rho_kantorovich(dens_par, t_par, U_par, tau_par, mu_par)
     return vectorized_entropy(t_par, v_dens, U_par, tau_par, mu_par)
 
+def KS_T_of_n(dens_par, t_par, U_par, tau_par, mu_par):
+    return T_of_n(dens_par, t_par, 0, tau_par, 0)
 
 
+def KS_Vee_of_n(dens_par, t_par, U_par, tau_par, mu_par):
+    dens_par  = np.array(dens_par).flatten()
+    return 0.5 * U_par * (1 + 0.25 * dens_par**2)
+
+
+def KS_S_of_n(dens_par, t_par, U_par, tau_par, mu_par):
+    return S_of_n(dens_par, t_par, 0, tau_par, 0)
+
+
+
+def Tc_tau(dens_par, t_par, U_par, tau_par, mu_par):
+    return T_of_n(dens_par, t_par, U_par, tau_par, mu_par) - KS_T_of_n(dens_par, t_par, U_par, tau_par, mu_par)
+
+
+def Sc_Tau(dens_par, t_par, U_par, tau_par, mu_par):
+    return S_of_n(dens_par, t_par, U_par, tau_par, mu_par) - KS_S_of_n(dens_par, t_par, U_par, tau_par, mu_par)
+
+
+def Veec_tau(dens_par, t_par, U_par, tau_par, mu_par):
+    return Vee_of_n(dens_par, t_par, U_par, tau_par, mu_par) - KS_Vee_of_n(dens_par, t_par, U_par, tau_par, mu_par)
+
+def Ac_tau(dens_par, t_par, U_par, tau_par, mu_par):
+    return Tc_tau(dens_par, t_par, U_par, tau_par, mu_par) - tau_par * Sc_Tau(dens_par, t_par, U_par, tau_par, mu_par) + Veec_tau(dens_par, t_par, U_par, tau_par, mu_par)
 ############################################ TEST AREA ####################################################
 # Fixed parameters
 ti, vi, Ui, taui, mui = 0.5, 2, 1, 1, 0.5
 dens_grid = np.arange(0, 2, 0.05)
-# plt.plot(dens_grid,Vee_of_n(dens_grid, ti, Ui, taui, mui))
-# plt.xlabel("density")
-# plt.ylabel("Kinetic energy")
-# plt.xlim(0,2)
-# plt.show()
-# print(kinetic(ti, vi, Ui, taui, mui))# -0.214451
-# print(vee(ti,vi,Ui,taui,mui))# 2.50531
-# print(entropy(ti,vi,Ui,taui,mui))# 2.46694
+for temp in np.array([0.1, 0.5, 1, 2, 4]):
+    plt.plot(dens_grid, Ac_tau(dens_grid, 0.5, 1, temp, 0.5), label=f"tau = {temp}")
+plt.legend()
+plt.title("Ac_Tau[n]")
+plt.xlim(0,2)
+plt.show()
+
+dens_grid = np.arange(0, 2, 0.05)
+for temp in np.array([0.1, 0.5, 1, 2, 4]):
+    plt.plot(dens_grid, Veec_tau(dens_grid, 0.5, 2, temp, 2*0.5), label=f"tau = {temp}")
+plt.legend()
+plt.title("Veec_Tau[n]")
+plt.xlim(0,2)
+plt.show()
