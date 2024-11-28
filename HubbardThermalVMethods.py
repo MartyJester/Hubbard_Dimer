@@ -321,19 +321,59 @@ def Ac_tau(dens_par, t_par, U_par, tau_par, mu_par):
     return Tc_tau(dens_par, t_par, U_par, tau_par, mu_par) - tau_par * Sc_Tau(dens_par, t_par, U_par, tau_par, mu_par) + Veec_tau(dens_par, t_par, U_par, tau_par, mu_par)
 ############################################ TEST AREA ####################################################
 # Fixed parameters
-ti, vi, Ui, taui, mui = 0.5, 2, 1, 1, 0.5
-dens_grid = np.arange(0, 2, 0.05)
-for temp in np.array([0.1, 0.5, 1, 2, 4]):
-    plt.plot(dens_grid, Ac_tau(dens_grid, 0.5, 1, temp, 0.5), label=f"tau = {temp}")
+# ti, vi, Ui, taui, mui = 0.5, 2, 1, 1, 0.5
+# dens_grid = np.arange(0, 2, 0.05)
+# for temp in np.array([0.1, 0.5, 1, 2, 4]):
+#     plt.plot(dens_grid, Ac_tau(dens_grid, 0.5, 1, temp, 0.5), label=f"tau = {temp}")
+# plt.legend()
+# plt.title("Ac_Tau[n]")
+# plt.xlim(0,2)
+# plt.show()
+#
+# dens_grid = np.arange(0, 2, 0.05)
+# for temp in np.array([0.1, 0.5, 1, 2, 4]):
+#     plt.plot(dens_grid, Veec_tau(dens_grid, 0.5, 2, temp, 2*0.5), label=f"tau = {temp}")
+# plt.legend()
+# plt.title("Veec_Tau[n]")
+# plt.xlim(0,2)
+# plt.show()
+
+lambda_grid = np.arange(0.01,6,0.25)
+DN = 0
+for temp in np.array([0.2, 0.5,1,2,4]):
+    vl = []
+    for l in lambda_grid:
+        vl.append(1/l*Veec_tau([DN], 0.5, 1 * l , temp, l * 0.5)[0]-KS_Vee_of_n([DN], 0.5, 1, temp, 0.5))
+    vl = np.array(vl)
+    plt.plot(lambda_grid, vl, label=f"tau = {temp}")
 plt.legend()
-plt.title("Ac_Tau[n]")
-plt.xlim(0,2)
+plt.xlabel("lambda")
+plt.ylabel("Vee_c_lambda")
+plt.grid(True)
 plt.show()
 
-dens_grid = np.arange(0, 2, 0.05)
-for temp in np.array([0.1, 0.5, 1, 2, 4]):
-    plt.plot(dens_grid, Veec_tau(dens_grid, 0.5, 2, temp, 2*0.5), label=f"tau = {temp}")
+lambda_grid = np.arange(0.01,1,0.025)
+for temp in np.array([0.2, 0.5,1,2,4]):
+    vl = []
+    for l in lambda_grid:
+        vl.append(1/l*Veec_tau([DN], 0.5, 1 * l , temp, l * 0.5)[0]-KS_Vee_of_n([DN], 0.5, 1, temp, 0.5))
+    vl = np.array(vl)
+    plt.plot(lambda_grid, vl, label=f"tau = {temp}")
 plt.legend()
-plt.title("Veec_Tau[n]")
-plt.xlim(0,2)
+plt.xlabel("lambda")
+plt.ylabel("Vee_c_lambda")
+plt.grid(True)
+plt.show()
+
+lambda_grid = np.arange(0.01,6,0.25)
+for temp in np.array([0.2, 0.5,1,2,4]):
+    vl = []
+    for l in lambda_grid:
+        vl.append(1/l*Veec_tau([DN], 0.5, 1 * l , temp, l * 0.5)[0])
+    vl = np.array(vl)
+    plt.plot(lambda_grid, vl, label=f"tau = {temp}")
+plt.legend()
+plt.xlabel("lambda")
+plt.ylabel("Vee_lambda")
+plt.grid(True)
 plt.show()
